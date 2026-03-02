@@ -94,8 +94,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 MIT License - see [LICENSE](LICENSE) for details.
 
----
 
-<p align="center">
-  Built with ❤️ using the power of AI and 86 specialized skills
-</p>
+
+
