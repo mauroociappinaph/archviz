@@ -1,0 +1,184 @@
+/**
+ * TypeScript AST Parser
+ * Parses TypeScript/JavaScript code to extract component relationships
+ */
+
+import { parse } from "@babel/parser";
+import traverse from "@babel/traverse";
+import * as t from "@babel/types";
+
+export interface ASTAnalysis {
+  imports: string[];
+  exports: string[];
+  components: string[];
+  hooks: string[];
+  dependencies: string[];
+  functions: string[];
+  interfaces: string[];
+  types: string[];
+}
+
+/**
+ * Parse TypeScript/JavaScript code and extract metadata
+ */
+export function parseTypeScript(code: string): ASTAnalysis {
+  const ast = parse(code, {
+    sourceType: "module",
+    plugins: [
+      "typescript",
+      "jsx",
+      "decorators-legacy",
+      "classProperties",
+      "asyncGenerators",
+      "dynamicImport",
+    ],
+  });
+
+  const analysis: ASTAnalysis = {
+    imports: [],
+    exports: [],
+    components: [],
+    hooks: [],
+    dependencies: [],
+    functions: [],
+    interfaces: [],
+    types: [],
+  };
+
+  traverse(ast, {
+    // Detect imports
+    ImportDeclaration(path) {
+      const source = path.node.source.value;
+      analysis.imports.push(source);
+
+      // Detect if it's an external dependency
+      if (!source.startsWith(".") && !source.startsWith("@/")) {
+        analysis.dependencies.push(source);
+      }
+    },
+
+    // Detect React components (functions starting with capital letter)
+    FunctionDeclaration(path) {
+      const name = path.node.id?.name;
+      if (name) {
+        analysis.functions.push(name);
+
+        if (isComponentName(name)) {
+          analysis.components.push(name);
+        }
+      }
+    },
+
+    // Detect arrow function components
+    VariableDeclarator(path) {
+      if (t.isIdentifier(path.node.id) && t.isArrowFunctionExpression(path.node.init)) {
+        const name = path.node.id.name;
+        analysis.functions.push(name);
+
+        if (isComponentName(name)) {
+          analysis.components.push(name);
+        }
+      }
+    },
+
+    // Detect hooks (functions starting with 'use')
+    CallExpression(path) {
+      const callee = path.node.callee;
+      if (t.isIdentifier(callee) && callee.name.startsWith("use")) {
+        // Only add if it's a React hook or custom hook
+        if (isHookName(callee.name)) {
+          analysis.hooks.push(callee.name);
+        }
+      }
+    },
+
+    // Detect exports
+    ExportNamedDeclaration(path) {
+      if (path.node.declaration) {
+        if (t.isFunctionDeclaration(path.node.declaration) && path.node.declaration.id) {
+          analysis.exports.push(path.node.declaration.id.name);
+        } else if (t.isVariableDeclaration(path.node.declaration)) {
+          path.node.declaration.declarations.forEach((decl) => {
+            if (t.isIdentifier(decl.id)) {
+              analysis.exports.push(decl.id.name);
+            }
+          });
+        }
+      }
+    },
+
+    ExportDefaultDeclaration(path) {
+      if (t.isFunctionDeclaration(path.node.declaration) && path.node.declaration.id) {
+        analysis.exports.push(path.node.declaration.id.name);
+      } else if (t.isIdentifier(path.node.declaration)) {
+        analysis.exports.push(path.node.declaration.name);
+      }
+    },
+
+    // Detect TypeScript interfaces
+    TSInterfaceDeclaration(path) {
+      analysis.interfaces.push(path.node.id.name);
+    },
+
+    // Detect TypeScript type aliases
+    TSTypeAliasDeclaration(path) {
+      analysis.types.push(path.node.id.name);
+    },
+  });
+
+  // Remove duplicates
+  return {
+    imports: [...new Set(analysis.imports)],
+    exports: [...new Set(analysis.exports)],
+    components: [...new Set(analysis.components)],
+    hooks: [...new Set(analysis.hooks)],
+    dependencies: [...new Set(analysis.dependencies)],
+    functions: [...new Set(analysis.functions)],
+    interfaces: [...new Set(analysis.interfaces)],
+    types: [...new Set(analysis.types)],
+  };
+}
+
+/**
+ * Check if a name follows React component naming convention
+ */
+function isComponentName(name: string): boolean {
+  // React components start with capital letter
+  return /^[A-Z][a-zA-Z0-9]*$/.test(name);
+}
+
+/**
+ * Check if a name is a React hook
+ */
+function isHookName(name: string): boolean {
+  // React hooks start with 'use' followed by capital letter
+  return /^use[A-Z][a-zA-Z0-9]*$/.test(name);
+}
+
+/**
+ * Detect the framework/library used in the file
+ */
+export function detectFramework(analysis: ASTAnalysis): string {
+  const deps = analysis.dependencies.map((d) => d.toLowerCase());
+
+  if (deps.some((d) => d.includes("react"))) {
+    return "React";
+  }
+  if (deps.some((d) => d.includes("vue"))) {
+    return "Vue";
+  }
+  if (deps.some((d) => d.includes("angular") || d.includes("@angular"))) {
+    return "Angular";
+  }
+  if (deps.some((d) => d.includes("svelte"))) {
+    return "Svelte";
+  }
+  if (deps.some((d) => d.includes("solid-js"))) {
+    return "SolidJS";
+  }
+  if (deps.some((d) => d.includes("preact"))) {
+    return "Preact";
+  }
+
+  return "Unknown";
+}

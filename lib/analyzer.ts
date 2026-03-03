@@ -6,7 +6,7 @@
 import { Octokit } from 'octokit';
 import { RepoAnalysis, Container, Component, SystemContext, ExternalSystem } from './types';
 
-const octokit = new Octokit();
+export const octokit = new Octokit();
 
 export async function analyzeRepository(repoUrl: string): Promise<RepoAnalysis> {
   // Parse owner and repo from URL
