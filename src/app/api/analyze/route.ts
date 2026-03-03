@@ -7,8 +7,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { container } from '@/src/infrastructure/config/Container';
-import { AnalysisController } from '@/src/interface/http/AnalysisController';
+import { container } from '@/infrastructure/config/Container';
+import { AnalysisController } from '@/interface/http/AnalysisController';
 
 export async function POST(request: NextRequest) {
   try {
