@@ -6,9 +6,17 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { InteractiveDiagram } from './InteractiveDiagram';
-import { Copy, Check, FileCode, Image, MousePointerClick } from 'lucide-react';
-import { useState } from 'react';
+import { exportToPNG, exportToSVG } from '@/lib/export/exportImage';
+import { exportSingleDiagramToPDF } from '@/lib/export/exportPDF';
+import { Copy, Check, FileCode, Image, MousePointerClick, Download, FileText, ImageIcon } from 'lucide-react';
+import { useState, useRef } from 'react';
 
 interface DiagramCardProps {
   title: string;
@@ -31,9 +39,39 @@ export function DiagramCard({
 }: DiagramCardProps) {
   const isHighlight = variant === 'highlight';
   const [selectedNode, setSelectedNode] = useState<{ id: string | null; text: string | null } | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const diagramRef = useRef<HTMLDivElement>(null);
 
   const handleNodeClick = (node: { id: string | null; text: string | null }) => {
     setSelectedNode(node);
+  };
+
+  const handleExportPNG = async () => {
+    if (!diagramRef.current) return;
+    setIsExporting(true);
+    try {
+      await exportToPNG(diagramRef.current, title.replace(/\s+/g, '_'));
+    } catch (error) {
+      console.error('Error exporting PNG:', error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    if (!diagramRef.current) return;
+    setIsExporting(true);
+    try {
+      await exportSingleDiagramToPDF(diagramRef.current, title);
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportSVG = () => {
+    onDownload();
   };
 
   return (
@@ -73,20 +111,58 @@ export function DiagramCard({
               </>
             )}
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onDownload}
-            className="border-slate-700/50 bg-slate-800/50 hover:bg-indigo-500/10 hover:border-indigo-500/30 text-slate-300 hover:text-indigo-400 transition-all duration-200 rounded-lg"
-          >
-            <Image className="w-4 h-4 mr-2" />
-            Export SVG
-          </Button>
+
+          {/* Export Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isExporting}
+                className="border-slate-700/50 bg-slate-800/50 hover:bg-indigo-500/10 hover:border-indigo-500/30 text-slate-300 hover:text-indigo-400 transition-all duration-200 rounded-lg"
+              >
+                {isExporting ? (
+                  <>
+                    <div className="w-4 h-4 mr-2 border-2 border-indigo-400/30 border-t-indigo-400 rounded-full animate-spin" />
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4 mr-2" />
+                    Export
+                  </>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-slate-800 border-slate-700">
+              <DropdownMenuItem
+                onClick={handleExportSVG}
+                className="text-slate-300 hover:text-white hover:bg-slate-700 cursor-pointer"
+              >
+                <FileCode className="w-4 h-4 mr-2 text-emerald-400" />
+                Mermaid Code (.mmd)
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={handleExportPNG}
+                className="text-slate-300 hover:text-white hover:bg-slate-700 cursor-pointer"
+              >
+                <ImageIcon className="w-4 h-4 mr-2 text-amber-400" />
+                PNG Image (.png)
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={handleExportPDF}
+                className="text-slate-300 hover:text-white hover:bg-slate-700 cursor-pointer"
+              >
+                <FileText className="w-4 h-4 mr-2 text-red-400" />
+                PDF Document (.pdf)
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
       {/* Interactive Content */}
-      <div className={`${isHighlight ? 'bg-slate-950/30' : 'bg-slate-950/50'}`}>
+      <div ref={diagramRef} className={`${isHighlight ? 'bg-slate-950/30' : 'bg-slate-950/50'}`}>
         <div className={`rounded-xl border overflow-hidden ${
           isHighlight
             ? 'border-purple-500/20'
