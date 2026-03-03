@@ -75,8 +75,8 @@ function adaptToLegacyFormat(dto: AnalysisResultDTO): {
 
 export const analyzeRepository = async (repoUrl: string): Promise<AnalysisResult> => {
   try {
-    // Use the new Clean Architecture endpoint
-    const response = await fetch('/api/analyze/new', {
+    // Use the Clean Architecture endpoint
+    const response = await fetch('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ repoUrl }),

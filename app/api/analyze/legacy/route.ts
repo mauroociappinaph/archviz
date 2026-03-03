@@ -1,14 +1,11 @@
 /**
- * API Route for Repository Analysis (Clean Architecture)
+ * API Route for Repository Analysis
  * POST /api/analyze
- *
- * This route uses the Clean Architecture implementation
- * with proper separation of concerns and dependency injection.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { container } from '@/src/infrastructure/config/Container';
-import { AnalysisController } from '@/src/interface/http/AnalysisController';
+import { analyzeRepository } from '@/lib/analyzer';
+import { generateDiagrams } from '@/lib/diagrams';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,26 +18,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get controller from DI container
-    const controller = new AnalysisController(
-      container.get('analyzeUseCase'),
-      container.get('relationshipsUseCase'),
-      container.get('exportUseCase')
-    );
-
-    // Execute analysis using Clean Architecture
-    const result = await controller.analyzeRepository(repoUrl);
-
-    if (!result.success) {
+    // Validate GitHub URL
+    if (!repoUrl.includes('github.com')) {
       return NextResponse.json(
-        { error: result.error },
+        { error: 'Only GitHub repositories are supported' },
         { status: 400 }
       );
     }
 
+    // Analyze the repository
+    const analysis = await analyzeRepository(repoUrl);
+
+    // Generate diagrams
+    const diagrams = generateDiagrams(analysis);
+
     return NextResponse.json({
       success: true,
-      data: result.data,
+      data: {
+        analysis,
+        diagrams,
+      },
     });
   } catch (error) {
     console.error('Analysis error:', error);
