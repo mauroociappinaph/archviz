@@ -1,28 +1,39 @@
 /**
  * Header Component
- * App header with title and description
+ * Elegant header with sophisticated typography and animations
  */
 
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Github } from 'lucide-react';
 
 export function Header() {
   return (
-    <div className="text-center mb-16 animate-fade-in">
-      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20 mb-6">
-        <Sparkles className="w-4 h-4 text-green-400" />
-        <span className="text-green-400 text-sm font-medium">AI-Powered Architecture Visualization</span>
+    <header className="text-center mb-16 animate-fade-in">
+      {/* Badge */}
+      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8 animate-slide-up delay-100">
+        <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
+        <span className="text-amber-400 text-sm font-medium tracking-wide">
+          AI-Powered Architecture Visualization
+        </span>
       </div>
 
-      <h1 className="text-6xl font-bold text-white mb-6 tracking-tight">
-        <span className="bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 bg-clip-text text-transparent">
-          archviz
-        </span>
+      {/* Main Title */}
+      <h1 className="font-serif text-7xl md:text-8xl font-bold mb-6 tracking-tight animate-slide-up delay-200">
+        <span className="gradient-text">archviz</span>
       </h1>
-      <p className="text-slate-400 text-lg max-w-2xl mx-auto leading-relaxed">
-        Visualize your repository architecture automatically.
+
+      {/* Subtitle */}
+      <p className="text-slate-400 text-xl max-w-2xl mx-auto leading-relaxed animate-slide-up delay-300 font-light">
+        Transform your GitHub repositories into beautiful
         <br />
-        Generate C4 diagrams from any GitHub repository in seconds.
+        <span className="text-amber-400 font-medium">C4 architecture diagrams</span> in seconds
       </p>
-    </div>
+
+      {/* Decorative Elements */}
+      <div className="flex items-center justify-center gap-4 mt-10 animate-slide-up delay-400">
+        <div className="h-px w-20 bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
+        <Github className="w-6 h-6 text-slate-500" />
+        <div className="h-px w-20 bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
+      </div>
+    </header>
   );
 }

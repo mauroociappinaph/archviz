@@ -1,17 +1,13 @@
 /**
  * DiagramCard Component
  * Displays a single diagram with copy and download actions
- *
- * SRP Principle: Handles only diagram display logic
- * DRY Principle: Reusable across all diagram types
  */
 
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MermaidDiagram } from './MermaidDiagram';
-import { Copy, Check, Download } from 'lucide-react';
+import { Copy, Check, FileCode, Image } from 'lucide-react';
 
 interface DiagramCardProps {
   title: string;
@@ -20,6 +16,7 @@ interface DiagramCardProps {
   onCopy: () => void;
   onDownload: () => void;
   copied: boolean;
+  variant?: 'default' | 'highlight';
 }
 
 export function DiagramCard({
@@ -29,29 +26,43 @@ export function DiagramCard({
   onCopy,
   onDownload,
   copied,
+  variant = 'default',
 }: DiagramCardProps) {
+  const isHighlight = variant === 'highlight';
+
   return (
-    <Card className="bg-slate-900/50 border-slate-700/50 backdrop-blur-xl">
-      <CardHeader className="flex flex-row items-start justify-between">
+    <div className={`rounded-2xl overflow-hidden hover-lift transition-smooth ${
+      isHighlight
+        ? 'bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-2 border-purple-500/30'
+        : 'glass'
+    }`}>
+      {/* Header */}
+      <div className={`p-6 border-b flex items-start justify-between ${
+        isHighlight ? 'border-purple-500/20' : 'border-slate-700/30'
+      }`}>
         <div>
-          <CardTitle className="text-white text-xl">{title}</CardTitle>
-          <CardDescription className="text-slate-400">{description}</CardDescription>
+          <h3 className={`text-xl font-semibold mb-1 ${isHighlight ? 'text-white' : 'text-white'}`}>
+            {title}
+          </h3>
+          <p className="text-slate-400 text-sm">{description}</p>
         </div>
         <div className="flex gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={onCopy}
-            className="border-slate-700 bg-slate-800/50 hover:bg-slate-700 text-slate-300 hover:text-white transition-all duration-200"
+            className={`border-slate-700/50 bg-slate-800/50 hover:bg-amber-500/10 hover:border-amber-500/30 text-slate-300 hover:text-amber-400 transition-all duration-200 rounded-lg ${
+              isHighlight ? 'hover:bg-purple-500/10 hover:border-purple-500/30 hover:text-purple-400' : ''
+            }`}
           >
             {copied ? (
               <>
-                <Check className="w-4 h-4 mr-2 text-green-400" />
+                <Check className="w-4 h-4 mr-2 text-emerald-400" />
                 Copied!
               </>
             ) : (
               <>
-                <Copy className="w-4 h-4 mr-2" />
+                <FileCode className="w-4 h-4 mr-2" />
                 Copy Code
               </>
             )}
@@ -60,18 +71,24 @@ export function DiagramCard({
             variant="outline"
             size="sm"
             onClick={onDownload}
-            className="border-slate-700 bg-slate-800/50 hover:bg-slate-700 text-slate-300 hover:text-white transition-all duration-200"
+            className="border-slate-700/50 bg-slate-800/50 hover:bg-indigo-500/10 hover:border-indigo-500/30 text-slate-300 hover:text-indigo-400 transition-all duration-200 rounded-lg"
           >
-            <Download className="w-4 h-4 mr-2" />
+            <Image className="w-4 h-4 mr-2" />
             Export SVG
           </Button>
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="bg-slate-950 rounded-xl p-6 border border-slate-800">
+      </div>
+
+      {/* Content */}
+      <div className={`p-6 ${isHighlight ? 'bg-slate-950/30' : 'bg-slate-950/50'}`}>
+        <div className={`rounded-xl p-6 border ${
+          isHighlight
+            ? 'border-purple-500/20 bg-slate-900/50'
+            : 'border-slate-800/50 bg-slate-900/30'
+        }`}>
           <MermaidDiagram chart={chart} />
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
