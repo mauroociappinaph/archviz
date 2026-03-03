@@ -26,28 +26,46 @@ import {
   DiagramDataDTO,
 } from "../dto/AnalysisResultDTO";
 import { DiagramGeneratorService } from "../services/DiagramGeneratorService";
+import { ICachePort } from "../ports/ICachePort";
+
+export interface CacheStatsDTO {
+  hitRate: number;
+  missRate: number;
+  totalEntries: number;
+  totalRequests: number;
+  fromCache: boolean;
+}
 
 export class AnalyzeRepositoryUseCase {
   constructor(
     private readonly githubApi: IGitHubApiPort,
     private readonly parser: IASTParserPort,
     private readonly repository: IAnalysisRepository,
-    private readonly diagramGenerator: DiagramGeneratorService
+    private readonly diagramGenerator: DiagramGeneratorService,
+    private readonly cache: ICachePort
   ) {}
 
   async execute(
     request: AnalyzeRepositoryRequest
-  ): Promise<AnalysisResultDTO> {
+  ): Promise<AnalysisResultDTO & { cacheStats?: CacheStatsDTO }> {
     // 1. Create validated URL Value Object
     const url = GitHubUrl.create(request.url);
     const owner = url.getOwner();
     const repoName = url.getRepo();
 
-    // 2. Check cache if not forcing refresh
+    // 2. Check SQLite cache first if not forcing refresh
+    const cacheKey = `analysis:${owner}/${repoName}`;
     if (!request.forceRefresh) {
-      const cached = await this.repository.findByUrl(url);
-      if (cached && !cached.isStale()) {
-        return this.mapToDTO(cached);
+      const cached = this.cache.get<AnalysisResultDTO>(cacheKey);
+      if (cached) {
+        const stats = this.cache.getStats();
+        return {
+          ...cached,
+          cacheStats: {
+            ...stats,
+            fromCache: true,
+          },
+        };
       }
     }
 
@@ -165,8 +183,19 @@ export class AnalyzeRepositoryUseCase {
     // 9. Save to repository
     await this.repository.save(repository);
 
-    // 10. Return DTO
-    return this.mapToDTO(repository);
+    // 10. Cache the result
+    const result = this.mapToDTO(repository);
+    this.cache.set(cacheKey, result, 7200); // Cache for 2 hours
+
+    // 11. Return DTO with cache stats
+    const stats = this.cache.getStats();
+    return {
+      ...result,
+      cacheStats: {
+        ...stats,
+        fromCache: false,
+      },
+    };
   }
 
   private extractComponentName(importPath: string): string {
