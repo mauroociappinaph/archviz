@@ -12,14 +12,22 @@ export class GitHubApiAdapter implements IGitHubApiPort {
   async fetchSourceFiles(
     owner: string,
     repo: string,
-    limit: number = 100
+    limit: number = 100,
+    maxDepth: number = 10
   ): Promise<SourceFile[]> {
     const files: SourceFile[] = [];
     const visitedDirs = new Set<string>();
 
-    const traverseDir = async (path: string = ''): Promise<void> => {
-      if (files.length >= limit) return;
-      if (visitedDirs.has(path)) return;
+    // Queue for BFS: [path, depth]
+    const queue: Array<{ path: string; depth: number }> = [{ path: '', depth: 0 }];
+
+    while (queue.length > 0 && files.length < limit) {
+      const { path, depth } = queue.shift()!;
+
+      // Skip if already visited or exceeds max depth
+      if (visitedDirs.has(path) || depth >= maxDepth) {
+        continue;
+      }
       visitedDirs.add(path);
 
       try {
@@ -29,13 +37,14 @@ export class GitHubApiAdapter implements IGitHubApiPort {
           path
         });
 
-        if (!Array.isArray(data)) return;
+        if (!Array.isArray(data)) continue;
 
         for (const item of data) {
           if (files.length >= limit) break;
 
           if (this.shouldTraverse(item)) {
-            await traverseDir(item.path);
+            // Add to queue for later processing (BFS)
+            queue.push({ path: item.path, depth: depth + 1 });
           } else if (this.isSourceFile(item)) {
             files.push(this.mapToSourceFile(item));
           }
@@ -44,9 +53,8 @@ export class GitHubApiAdapter implements IGitHubApiPort {
         // Silently skip directories we can't access
         console.warn(`Skipping path ${path}: ${error}`);
       }
-    };
+    }
 
-    await traverseDir();
     return files;
   }
 

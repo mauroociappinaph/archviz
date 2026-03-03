@@ -13,11 +13,13 @@ export interface SourceFile {
 export interface IGitHubApiPort {
   /**
    * Fetch source files from repository
+   * @param maxDepth - Maximum directory depth to traverse (default: 10)
    */
   fetchSourceFiles(
     owner: string,
     repo: string,
-    limit: number
+    limit: number,
+    maxDepth?: number
   ): Promise<SourceFile[]>;
 
   /**
