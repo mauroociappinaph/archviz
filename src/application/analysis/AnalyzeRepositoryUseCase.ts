@@ -23,13 +23,16 @@ import {
   AnalysisResultDTO,
   ComponentDTO,
   RelationshipDTO,
+  DiagramDataDTO,
 } from "../dto/AnalysisResultDTO";
+import { DiagramGeneratorService } from "../services/DiagramGeneratorService";
 
 export class AnalyzeRepositoryUseCase {
   constructor(
     private readonly githubApi: IGitHubApiPort,
     private readonly parser: IASTParserPort,
-    private readonly repository: IAnalysisRepository
+    private readonly repository: IAnalysisRepository,
+    private readonly diagramGenerator: DiagramGeneratorService
   ) {}
 
   async execute(
@@ -197,6 +200,9 @@ export class AnalyzeRepositoryUseCase {
 
     const metrics = repository.getMetrics();
 
+    // Generate diagrams using the diagram generator service
+    const diagrams = this.diagramGenerator.generateDiagrams(repository);
+
     return AnalysisResultDTO.fromDomain(
       repository.getId().toString(),
       repository.getUrl().toString(),
@@ -212,6 +218,7 @@ export class AnalyzeRepositoryUseCase {
           ? metrics.mostConnectedComponent.getName()
           : null,
       },
+      diagrams,
       repository.getAnalyzedAt()
     );
   }

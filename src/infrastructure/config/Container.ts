@@ -2,6 +2,7 @@ import { Octokit } from 'octokit';
 import { AnalyzeRepositoryUseCase } from '../../application/analysis/AnalyzeRepositoryUseCase';
 import { GetComponentRelationshipsUseCase } from '../../application/analysis/GetComponentRelationshipsUseCase';
 import { ExportMetricsUseCase } from '../../application/analysis/ExportMetricsUseCase';
+import { DiagramGeneratorService } from '../../application/services/DiagramGeneratorService';
 import { GitHubApiAdapter } from '../github/GitHubApiAdapter';
 import { GitHubRepositoryMapper } from '../github/GitHubRepositoryMapper';
 import { BabelASTAdapter } from '../parser/BabelASTAdapter';
@@ -35,11 +36,15 @@ export class Container {
     this.dependencies.set('parser', new BabelASTAdapter());
     this.dependencies.set('repository', new InMemoryAnalysisRepository());
 
+    // Application - Services
+    this.dependencies.set('diagramGenerator', new DiagramGeneratorService());
+
     // Application - Use Cases
     this.dependencies.set('analyzeUseCase', new AnalyzeRepositoryUseCase(
       this.get('githubApi'),
       this.get('parser'),
-      this.get('repository')
+      this.get('repository'),
+      this.get('diagramGenerator')
     ));
 
     this.dependencies.set('relationshipsUseCase', new GetComponentRelationshipsUseCase(

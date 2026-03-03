@@ -25,6 +25,12 @@ export interface RepositoryMetricsDTO {
   mostConnectedComponent: string | null;
 }
 
+export interface DiagramDataDTO {
+  context: string;
+  container: string;
+  component: string;
+}
+
 export class AnalysisResultDTO {
   constructor(
     public readonly id: string,
@@ -34,6 +40,7 @@ export class AnalysisResultDTO {
     public readonly components: ComponentDTO[],
     public readonly relationships: RelationshipDTO[],
     public readonly metrics: RepositoryMetricsDTO,
+    public readonly diagrams: DiagramDataDTO,
     public readonly analyzedAt: string
   ) {}
 
@@ -48,6 +55,7 @@ export class AnalysisResultDTO {
     components: ComponentDTO[],
     relationships: RelationshipDTO[],
     metrics: RepositoryMetricsDTO,
+    diagrams: DiagramDataDTO,
     analyzedAt: Date
   ): AnalysisResultDTO {
     return new AnalysisResultDTO(
@@ -58,6 +66,7 @@ export class AnalysisResultDTO {
       components,
       relationships,
       metrics,
+      diagrams,
       analyzedAt.toISOString()
     );
   }
