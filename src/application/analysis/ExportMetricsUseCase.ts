@@ -1,7 +1,7 @@
-import type { Repository } from '../../domain/Repository';
-import type { RepositoryId } from '../../domain/value-objects/RepositoryId';
-import type { Framework } from '../../domain/value-objects/Framework';
-import type { IAnalysisRepository } from '../../domain/ports/IAnalysisRepository';
+import type { Repository } from '../../domain/analysis/Repository';
+import type { RepositoryId } from '../../domain/analysis/RepositoryId';
+import type { Framework } from '../../domain/analysis/Framework';
+import type { IAnalysisRepository } from '../../domain/repositories/IAnalysisRepository';
 
 export interface ExportMetricsRequest {
   repositoryId: RepositoryId;
@@ -10,26 +10,22 @@ export interface ExportMetricsRequest {
 
 export interface ComponentMetricsDTO {
   name: string;
-  type: string;
   filePath: string;
-  linesOfCode: number;
-  incomingDependencies: number;
-  outgoingDependencies: number;
-  complexity: number;
+  framework: string;
+  hooks: string[];
+  dependencies: string[];
 }
 
 export interface RepositoryMetricsDTO {
   repository: {
     name: string;
     url: string;
-    framework: Framework;
+    framework: string;
     analyzedAt: Date;
   };
   summary: {
     totalComponents: number;
-    totalRelationships: number;
-    averageComplexity: number;
-    linesOfCode: number;
+    totalExternalDependencies: number;
   };
   components: ComponentMetricsDTO[];
 }
@@ -52,18 +48,13 @@ export class ExportMetricsUseCase {
     );
 
     if (!repository) {
-      throw new Error(`Repository not found: ${request.repositoryId.value}`);
+      throw new Error(`Repository not found: ${request.repositoryId.toString()}`);
     }
 
-    // Step 2: Get all components
-    const components = await this.analysisRepository.getAllComponents(
-      request.repositoryId
-    );
+    // Step 2: Build metrics DTO
+    const metrics = this.buildMetricsDTO(repository);
 
-    // Step 3: Build metrics DTO
-    const metrics = await this.buildMetricsDTO(repository, components);
-
-    // Step 4: Format based on requested format
+    // Step 3: Format based on requested format
     switch (request.format) {
       case 'json':
         return this.formatAsJson(metrics);
@@ -76,48 +67,29 @@ export class ExportMetricsUseCase {
     }
   }
 
-  private async buildMetricsDTO(
-    repository: Repository,
-    components: import('../../domain/Component').Component[]
-  ): Promise<RepositoryMetricsDTO> {
-    const componentMetrics: ComponentMetricsDTO[] = await Promise.all(
-      components.map(async (component) => {
-        const incoming = await this.analysisRepository.getIncomingRelationships(
-          component.id
-        );
-        const outgoing = await this.analysisRepository.getOutgoingRelationships(
-          component.id
-        );
+  private buildMetricsDTO(
+    repository: Repository
+  ): RepositoryMetricsDTO {
+    const components = repository.getComponents();
 
-        return {
-          name: component.name,
-          type: component.type,
-          filePath: component.filePath,
-          linesOfCode: component.metrics.linesOfCode,
-          incomingDependencies: incoming.length,
-          outgoingDependencies: outgoing.length,
-          complexity: component.metrics.complexity
-        };
-      })
-    );
-
-    const totalLoc = componentMetrics.reduce((sum, c) => sum + c.linesOfCode, 0);
-    const avgComplexity = componentMetrics.length > 0
-      ? componentMetrics.reduce((sum, c) => sum + c.complexity, 0) / componentMetrics.length
-      : 0;
+    const componentMetrics: ComponentMetricsDTO[] = components.map((component) => ({
+      name: component.getName(),
+      filePath: component.getFilePath(),
+      framework: component.getFramework().toString(),
+      hooks: Array.from(component.getHooks()),
+      dependencies: Array.from(component.getDependencies())
+    }));
 
     return {
       repository: {
-        name: repository.name,
-        url: repository.url.value,
-        framework: repository.framework,
-        analyzedAt: repository.analyzedAt
+        name: repository.getName(),
+        url: repository.getUrl().toString(),
+        framework: repository.getFramework().toString(),
+        analyzedAt: repository.getAnalyzedAt()
       },
       summary: {
-        totalComponents: repository.components.length,
-        totalRelationships: repository.relationships.length,
-        averageComplexity: Math.round(avgComplexity * 100) / 100,
-        linesOfCode: totalLoc
+        totalComponents: repository.getComponentCount(),
+        totalExternalDependencies: repository.getExternalDependencies().length
       },
       components: componentMetrics
     };
@@ -130,23 +102,19 @@ export class ExportMetricsUseCase {
   private formatAsCsv(metrics: RepositoryMetricsDTO): string {
     const headers = [
       'Name',
-      'Type',
       'File Path',
-      'Lines of Code',
-      'Incoming Dependencies',
-      'Outgoing Dependencies',
-      'Complexity'
+      'Framework',
+      'Hooks Count',
+      'Dependencies Count'
     ].join(',');
 
     const rows = metrics.components.map(c =>
       [
         `"${c.name}"`,
-        c.type,
         `"${c.filePath}"`,
-        c.linesOfCode,
-        c.incomingDependencies,
-        c.outgoingDependencies,
-        c.complexity
+        c.framework,
+        c.hooks.length,
+        c.dependencies.length
       ].join(',')
     );
 
@@ -168,19 +136,17 @@ export class ExportMetricsUseCase {
       `| Metric | Value |`,
       `|--------|-------|`,
       `| Total Components | ${metrics.summary.totalComponents} |`,
-      `| Total Relationships | ${metrics.summary.totalRelationships} |`,
-      `| Average Complexity | ${metrics.summary.averageComplexity} |`,
-      `| Lines of Code | ${metrics.summary.linesOfCode} |`,
+      `| Total External Dependencies | ${metrics.summary.totalExternalDependencies} |`,
       '',
       '## Components',
       '',
-      `| Component | Type | File | LOC | In | Out | Complexity |`,
-      `|-----------|------|------|-----|----|-----|------------|`
+      `| Component | File | Framework | Hooks | Deps |`,
+      `|-----------|------|-----------|-------|------|`
     ];
 
     for (const c of metrics.components) {
       lines.push(
-        `| ${c.name} | ${c.type} | ${c.filePath.split('/').pop()} | ${c.linesOfCode} | ${c.incomingDependencies} | ${c.outgoingDependencies} | ${c.complexity} |`
+        `| ${c.name} | ${c.filePath.split('/').pop()} | ${c.framework} | ${c.hooks.length} | ${c.dependencies.length} |`
       );
     }
 

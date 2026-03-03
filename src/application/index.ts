@@ -11,5 +11,5 @@ export type { AnalysisResultDTO, ComponentDTO, RelationshipDTO } from './dto/Ana
 
 // Use Cases
 export { AnalyzeRepositoryUseCase } from './analysis/AnalyzeRepositoryUseCase';
-export { GetComponentRelationshipsUseCase } from './analysis/GetComponentRelationshipsUseCase';
-export { ExportMetricsUseCase } from './analysis/ExportMetricsUseCase';
+export { GetComponentRelationshipsUseCase, type GetComponentRelationshipsRequest } from './analysis/GetComponentRelationshipsUseCase';
+export { ExportMetricsUseCase, type ExportMetricsRequest } from './analysis/ExportMetricsUseCase';

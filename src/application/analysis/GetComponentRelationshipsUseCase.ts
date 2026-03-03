@@ -1,19 +1,19 @@
-import type { Component } from '../../domain/Component';
-import type { Relationship } from '../../domain/Relationship';
-import type { ComponentId } from '../../domain/value-objects/ComponentId';
-import type { IAnalysisRepository } from '../../domain/ports/IAnalysisRepository';
+import type { Component } from '../../domain/analysis/Component';
+import type { Relationship } from '../../domain/analysis/Relationship';
+import type { ComponentId } from '../../domain/analysis/ComponentId';
+import type { RepositoryId } from '../../domain/analysis/RepositoryId';
+import type { Repository } from '../../domain/analysis/Repository';
+import type { IAnalysisRepository } from '../../domain/repositories/IAnalysisRepository';
 
 export interface GetComponentRelationshipsRequest {
+  repositoryId: RepositoryId;
   componentId: ComponentId;
-  repositoryId: string;
 }
 
 export interface ComponentWithRelationshipsDTO {
   component: Component;
   incoming: Relationship[];
   outgoing: Relationship[];
-  dependencies: Component[];
-  dependents: Component[];
 }
 
 /**
@@ -28,46 +28,30 @@ export class GetComponentRelationshipsUseCase {
   async execute(
     request: GetComponentRelationshipsRequest
   ): Promise<ComponentWithRelationshipsDTO> {
-    // Step 1: Retrieve the component
-    const component = await this.analysisRepository.getComponent(
-      request.componentId
+    // Step 1: Retrieve the repository
+    const repository = await this.analysisRepository.findById(
+      request.repositoryId
     );
 
-    if (!component) {
-      throw new Error(`Component not found: ${request.componentId.value}`);
+    if (!repository) {
+      throw new Error(`Repository not found: ${request.repositoryId.toString()}`);
     }
 
-    // Step 2: Get all relationships for this component
-    const incoming = await this.analysisRepository.getIncomingRelationships(
-      request.componentId
-    );
-    const outgoing = await this.analysisRepository.getOutgoingRelationships(
-      request.componentId
-    );
+    // Step 2: Find the component in the repository
+    const component = repository.getComponent(request.componentId);
 
-    // Step 3: Get related components
-    const dependencyIds = outgoing.map(r => r.targetId);
-    const dependentIds = incoming.map(r => r.sourceId);
+    if (!component) {
+      throw new Error(`Component not found: ${request.componentId.toString()}`);
+    }
 
-    const [dependencies, dependents] = await Promise.all([
-      Promise.all(
-        dependencyIds.map(id => this.analysisRepository.getComponent(id))
-      ),
-      Promise.all(
-        dependentIds.map(id => this.analysisRepository.getComponent(id))
-      )
-    ]);
-
-    // Step 4: Filter out nulls (in case components were deleted)
-    const validDependencies = dependencies.filter((c): c is Component => c !== null);
-    const validDependents = dependents.filter((c): c is Component => c !== null);
+    // Step 3: Get all relationships for this component
+    const incoming = repository.getRelationshipsTo(request.componentId);
+    const outgoing = repository.getRelationshipsFrom(request.componentId);
 
     return {
       component,
       incoming,
-      outgoing,
-      dependencies: validDependencies,
-      dependents: validDependents
+      outgoing
     };
   }
 }
