@@ -382,3 +382,133 @@
   background: rgba(245, 158, 11, 0.3);
   color: #f8f9fc;
 }
+
+/* ============================================
+   INTERACTIVE DIAGRAM STYLES
+   ============================================ */
+
+/* Selected Node Styling */
+.mermaid-diagram .node.selected rect,
+.mermaid-diagram .node.selected circle,
+.mermaid-diagram .node.selected polygon,
+.mermaid-diagram .node.selected ellipse {
+  stroke: #f59e0b !important;
+  stroke-width: 4px !important;
+  filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.6)) !important;
+}
+
+.mermaid-diagram .node.selected text {
+  fill: #f59e0b !important;
+  font-weight: 600 !important;
+}
+
+/* Node Hover Effects */
+.mermaid-diagram .node:hover {
+  cursor: pointer;
+}
+
+.mermaid-diagram .node:hover rect,
+.mermaid-diagram .node:hover circle,
+.mermaid-diagram .node:hover polygon,
+.mermaid-diagram .node:hover ellipse {
+  stroke: #fbbf24 !important;
+  stroke-width: 3px !important;
+  filter: brightness(1.2);
+}
+
+/* Interactive Diagram Container */
+.mermaid-diagram {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.mermaid-diagram svg {
+  display: block;
+  margin: 0 auto;
+}
+
+/* Cursor states for diagram interaction */
+.cursor-grab {
+  cursor: grab;
+}
+
+.cursor-grabbing {
+  cursor: grabbing !important;
+}
+
+/* Ensure nodes are clickable */
+.mermaid-diagram .node {
+  pointer-events: all;
+}
+
+/* Fullscreen styles */
+:fullscreen {
+  background: #0a0e1a;
+  padding: 0;
+}
+
+:-webkit-full-screen {
+  background: #0a0e1a;
+  padding: 0;
+}
+
+:-moz-full-screen {
+  background: #0a0e1a;
+  padding: 0;
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .mermaid-diagram .node:hover {
+    filter: none;
+  }
+
+  .mermaid-diagram .node:active rect,
+  .mermaid-diagram .node:active circle,
+  .mermaid-diagram .node:active polygon,
+  .mermaid-diagram .node:active ellipse {
+    stroke: #fbbf24 !important;
+    stroke-width: 3px !important;
+  }
+}
+
+/* Animation for node selection */
+@keyframes nodeSelect {
+  0% {
+    stroke-width: 2px;
+    filter: drop-shadow(0 0 0px rgba(245, 158, 11, 0));
+  }
+  50% {
+    stroke-width: 5px;
+    filter: drop-shadow(0 0 20px rgba(245, 158, 11, 0.8));
+  }
+  100% {
+    stroke-width: 4px;
+    filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.6));
+  }
+}
+
+.mermaid-diagram .node.selected {
+  animation: nodeSelect 0.3s ease-out;
+}
+
+/* Toolbar button hover effects */
+.diagram-toolbar-btn {
+  transition: all 0.2s ease;
+}
+
+.diagram-toolbar-btn:hover {
+  transform: scale(1.1);
+}
+
+.diagram-toolbar-btn:active {
+  transform: scale(0.95);
+}
+
+/* Prevent text selection during drag */
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
