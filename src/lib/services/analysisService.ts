@@ -45,7 +45,7 @@ export async function analyzeRepository(repoUrl: string): Promise<AnalysisRespon
       data: data.data,
     };
   } catch (error) {
-    console.error("Analysis error:", error);
+    // Error handling without console output for production
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error occurred",
