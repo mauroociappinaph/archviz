@@ -13,3 +13,7 @@ export { BabelASTAdapter } from './parser/BabelASTAdapter';
 
 // Persistence Infrastructure
 export { InMemoryAnalysisRepository } from './persistence/InMemoryAnalysisRepository';
+
+// Logging Infrastructure
+export { ConsoleLoggerAdapter } from './logging/ConsoleLoggerAdapter';
+export { NoOpLoggerAdapter } from './logging/NoOpLoggerAdapter';

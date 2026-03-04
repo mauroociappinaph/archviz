@@ -4,6 +4,7 @@
 // Ports (Driven and Driving)
 export type { IGitHubApiPort } from './ports/IGitHubApiPort';
 export type { IASTParserPort } from './ports/IASTParserPort';
+export type { ILoggerPort } from './ports/ILoggerPort';
 
 // DTOs
 export { AnalyzeRepositoryRequest } from './dto/AnalyzeRepositoryRequest';

@@ -129,11 +129,12 @@ Dependencies point **inward only**:
 
 ## API Endpoints
 
-### Legacy (Old)
-- `POST /api/analyze` - Uses legacy analyzer
+### Current (Clean Architecture)
+- `POST /api/analyze` - Uses Clean Architecture implementation
 
-### New (Clean Architecture)
-- `POST /api/analyze/new` - Uses new Clean Architecture implementation
+### Legacy (Removed)
+- ~~`POST /api/analyze/legacy`~~ - Removed
+- ~~`POST /api/analyze/new`~~ - Consolidated into `/api/analyze`
 
 ## Testing Strategy
 
@@ -157,15 +158,17 @@ Dependencies point **inward only**:
 - Implement Infrastructure Layer
 - Implement Interface Layer
 
-### Phase 2: 🔄 In Progress
+### Phase 2: ✅ Complete
 - Run both legacy and new implementations in parallel
 - Compare results for validation
 - Gradually migrate traffic to new implementation
 
-### Phase 3: 📋 Planned
+### Phase 3: ✅ Complete
 - Remove legacy code (`lib/analyzer.ts`, etc.)
-- Rename `/api/analyze/new` to `/api/analyze`
+- Consolidate API endpoints
 - Archive old implementation
+
+**Migration Status: ✅ COMPLETE**
 
 ## Statistics
 
@@ -175,7 +178,8 @@ Dependencies point **inward only**:
 | Application | 8 | ~700 | Use cases, orchestration |
 | Infrastructure | 7 | ~850 | External adapters, DI |
 | Interface | 1 | ~125 | HTTP handlers |
-| **Total** | **26** | **~2475** | Complete system |
+| Tests | 8+ | ~800 | Unit & integration tests |
+| **Total** | **34+** | **~3275** | Complete system |
 
 ## Benefits
 

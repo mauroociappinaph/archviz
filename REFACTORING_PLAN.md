@@ -26,46 +26,63 @@ Este documento detalla el plan para implementar las 3 mejoras principales:
 - [x] Migrar lógica de `lib/diagrams.ts` a Clean Architecture
 - [x] Integrar generación de C4 diagrams en el use case
 
-### 1.4 Eliminar Legacy (Pendiente - Fase 1B)
-- [ ] Mover `/api/analyze` a `/api/analyze/legacy` (backup)
-- [ ] Renombrar `/api/analyze/new` a `/api/analyze`
-- [ ] Eliminar archivos legacy:
-  - `lib/analyzer.ts`
-  - `lib/diagrams.ts`
-  - `lib/services/astAnalysisService.ts`
-- [ ] Eliminar código AST duplicado en `lib/ast/`
+### 1.4 Eliminar Legacy (✅ Completado - Fase 1B)
+- [x] ~~Mover `/api/analyze` a `/api/analyze/legacy` (backup)~~ - No aplica, `/api/analyze` ya usa Clean Architecture
+- [x] ~~Renombrar `/api/analyze/new` a `/api/analyze`~~ - No aplica, no existe `/api/analyze/new`
+- [x] Eliminar archivos legacy - Ya limpio
+  - ~~`lib/analyzer.ts`~~ - Eliminado
+  - ~~`lib/diagrams.ts`~~ - Eliminado
+  - ~~`lib/services/astAnalysisService.ts`~~ - Eliminado
+- [x] ~~Eliminar código AST duplicado en `lib/ast/`~~ - Ya limpio
 
 ### 1.5 Testing de Migración ✅
-- [x] Verificar que todos los tests pasan (9/9)
+- [x] Verificar que todos los tests pasan (103/103)
 - [x] Build exitoso sin errores
+- [x] Jest config actualizado (eliminada referencia a `lib/`)
 - [ ] Validar análisis con repositorios reales (requiere deploy)
 
 ---
 
-### ✅ COMPLETADO EN ESTA SESIÓN:
+### ✅ FASE 1 COMPLETADA - MIGRACIÓN FINALIZADA
 
-#### Nuevos Archivos Creados:
-1. `src/application/services/DiagramGeneratorService.ts` - Generador de diagramas C4
-
-#### Archivos Modificados:
-1. `src/application/dto/AnalysisResultDTO.ts` - Agregado `DiagramDataDTO`
-2. `src/application/analysis/AnalyzeRepositoryUseCase.ts` - Integrado diagram generator
-3. `src/infrastructure/config/Container.ts` - Registrado nuevo servicio
-4. `lib/services/analysisService.ts` - Usa nueva API con adapter de compatibilidad
-
-#### Estado:
+#### Estado Actual:
 - ✅ Build: Exitoso
-- ✅ Tests: 9/9 pasando
+- ✅ Tests: 103/103 pasando
 - ✅ TypeScript: Sin errores
-- 🔄 Frontend ahora usa `/api/analyze/new` con adapter para backward compatibility
+- ✅ Jest: Configuración actualizada
+- ✅ Legacy: Código eliminado
+- ✅ API: `/api/analyze` usa Clean Architecture directamente
 
-### 🔄 PRÓXIMOS PASOS (Fase 1B - Eliminación Legacy):
-Para completar la migración, se debe:
-1. Hacer backup de `/api/analyze` → `/api/analyze/legacy`
-2. Renombrar `/api/analyze/new` → `/api/analyze`
-3. Actualizar frontend para usar `/api/analyze` directamente
-4. Eliminar archivos legacy
-5. Ejecutar tests E2E para validación final
+#### Archivos Eliminados/Limpiados:
+- ~~`lib/analyzer.ts`~~ - Eliminado
+- ~~`lib/diagrams.ts`~~ - Eliminado
+- ~~`lib/ast/`~~ - Directorio eliminado
+- ~~`lib/services/astAnalysisService.ts`~~ - Eliminado
+
+#### Archivos Actualizados:
+1. `jest.config.js` - Eliminada referencia a `lib/`
+2. `REFACTORING_PLAN.md` - Actualizado estado
+
+#### Arquitectura Actual:
+```
+src/
+├── domain/          # ✅ Completo con tests
+├── application/     # ✅ Completo
+├── infrastructure/  # ✅ Completo
+├── interface/       # ✅ Completo
+└── lib/             # ✅ Solo utilidades necesarias
+    ├── utils.ts     # Utilidades Tailwind
+    ├── types/       # Tipos del frontend
+    ├── services/    # analysisService.ts
+    ├── export/      # Export PNG/PDF
+    └── utils/       # Validación URL
+```
+
+### ✅ FASE 1B COMPLETADA - Legacy Eliminado
+
+La migración está **completa**. No hay código legacy pendiente.
+
+**Próxima Fase:** Fase 2 - Mejorar Coverage de Tests (>80%)
 
 ---
 

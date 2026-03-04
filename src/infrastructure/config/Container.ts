@@ -8,6 +8,7 @@ import { GitHubRepositoryMapper } from '../github/GitHubRepositoryMapper';
 import { BabelASTAdapter } from '../parser/BabelASTAdapter';
 import { InMemoryAnalysisRepository } from '../persistence/InMemoryAnalysisRepository';
 import { SQLiteCacheAdapter } from '../cache/SQLiteCacheAdapter';
+import { ConsoleLoggerAdapter } from '../logging/ConsoleLoggerAdapter';
 
 /**
  * Dependency Injection Container
@@ -37,6 +38,7 @@ export class Container {
     this.dependencies.set('parser', new BabelASTAdapter());
     this.dependencies.set('repository', new InMemoryAnalysisRepository());
     this.dependencies.set('cache', new SQLiteCacheAdapter());
+    this.dependencies.set('logger', new ConsoleLoggerAdapter('AnalyzeRepository'));
 
     // Application - Services
     this.dependencies.set('diagramGenerator', new DiagramGeneratorService());
@@ -47,7 +49,8 @@ export class Container {
       this.get('parser'),
       this.get('repository'),
       this.get('diagramGenerator'),
-      this.get('cache')
+      this.get('cache'),
+      this.get('logger')
     ));
 
     this.dependencies.set('relationshipsUseCase', new GetComponentRelationshipsUseCase(

@@ -18,6 +18,7 @@ import {
 
 import { IGitHubApiPort } from "../ports/IGitHubApiPort";
 import { IASTParserPort } from "../ports/IASTParserPort";
+import { ILoggerPort } from "../ports/ILoggerPort";
 import { AnalyzeRepositoryRequest } from "../dto/AnalyzeRepositoryRequest";
 import {
   AnalysisResultDTO,
@@ -42,7 +43,8 @@ export class AnalyzeRepositoryUseCase {
     private readonly parser: IASTParserPort,
     private readonly repository: IAnalysisRepository,
     private readonly diagramGenerator: DiagramGeneratorService,
-    private readonly cache: ICachePort
+    private readonly cache: ICachePort,
+    private readonly logger: ILoggerPort
   ) {}
 
   async execute(
@@ -127,7 +129,7 @@ export class AnalyzeRepositoryUseCase {
         }
       } catch (error) {
         // Log error but continue with other files
-        console.warn(`Failed to analyze ${file.path}:`, error);
+        this.logger.warn(`Failed to analyze ${file.path}:`, { error });
       }
     }
 
@@ -176,7 +178,7 @@ export class AnalyzeRepositoryUseCase {
           }
         }
       } catch (error) {
-        console.warn(`Failed to detect relationships in ${file.path}:`, error);
+        this.logger.warn(`Failed to detect relationships in ${file.path}:`, { error });
       }
     }
 

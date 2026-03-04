@@ -10,6 +10,7 @@ import { IASTParserPort } from '../../ports/IASTParserPort';
 import { ICachePort } from '../../ports/ICachePort';
 import { IAnalysisRepository } from '../../../domain/repositories/IAnalysisRepository';
 import { DiagramGeneratorService } from '../../services/DiagramGeneratorService';
+import { NoOpLoggerAdapter } from '../../../infrastructure/logging/NoOpLoggerAdapter';
 
 // Mock implementations
 const createMockGitHubApi = (): jest.Mocked<IGitHubApiPort> => ({
@@ -64,7 +65,8 @@ describe('AnalyzeRepositoryUseCase', () => {
       mockParser,
       mockRepository,
       diagramGenerator,
-      mockCache
+      mockCache,
+      new NoOpLoggerAdapter()
     );
 
     // Default mock implementations
